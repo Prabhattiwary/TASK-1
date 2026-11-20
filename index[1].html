@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Expense Tracker</title>
+  <style>
+    :root {
+      --blue: #315fce;
+      --blue-dark: #234aa8;
+      --ink: #172033;
+      --muted: #748097;
+      --line: #e8edf5;
+      --surface: #ffffff;
+      --bg: #f4f7fc;
+      --green: #15966a;
+      --red: #d94d5c;
+      --shadow: 0 12px 35px rgba(27, 48, 92, .08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .app { max-width: 1180px; margin: 0 auto; padding: 34px 22px 50px; }
+    header { display:flex; justify-content:space-between; align-items:center; gap:18px; margin-bottom:28px; }
+    .brand { display:flex; align-items:center; gap:13px; }
+    .logo { width:48px; height:48px; display:grid; place-items:center; color:white; background:var(--blue); border-radius:15px; font-size:24px; box-shadow:0 8px 18px #315fce44; }
+    h1 { margin:0; font-size:clamp(24px, 4vw, 31px); letter-spacing:-1px; }
+    .subtitle { color:var(--muted); margin:4px 0 0; font-size:14px; }
+    .date-pill { background:white; border:1px solid var(--line); border-radius:30px; padding:10px 15px; color:var(--muted); font-size:13px; white-space:nowrap; }
+    .summary { display:grid; grid-template-columns:repeat(3,1fr); gap:17px; margin-bottom:23px; }
+    .card { background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:21px; box-shadow:var(--shadow); }
+    .summary-card { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .summary-label { color:var(--muted); font-size:13px; font-weight:600; }
+    .amount { font-size:clamp(22px,3vw,29px); font-weight:750; margin-top:9px; letter-spacing:-.7px; overflow-wrap:anywhere; }
+    .summary-icon { width:43px; height:43px; border-radius:14px; display:grid; place-items:center; font-size:20px; background:#eef3ff; }
+    .income .amount { color:var(--green); } .expense .amount { color:var(--red); }
+    .balance .summary-icon { background:#eaf8f2; }
+    .content { display:grid; grid-template-columns:350px 1fr; gap:20px; align-items:start; }
+    .card h2 { margin:0 0 18px; font-size:17px; letter-spacing:-.3px; }
+    label { display:block; font-size:12px; font-weight:650; color:#58647a; margin:14px 0 7px; }
+    input, select {
+      width:100%; border:1px solid #dfe5ef; border-radius:10px; padding:12px 12px;
+      font:inherit; font-size:14px; background:#fff; color:var(--ink); outline:none;
+    }
+    input:focus, select:focus { border-color:var(--blue); box-shadow:0 0 0 3px #315fce18; }
+    .type-switch { display:grid; grid-template-columns:1fr 1fr; gap:8px; background:#f1f4f9; padding:5px; border-radius:11px; }
+    .type-switch button { border:0; padding:10px; border-radius:8px; font:inherit; font-size:13px; font-weight:700; color:var(--muted); background:transparent; cursor:pointer; }
+    .type-switch button.active { background:white; color:var(--blue); box-shadow:0 2px 7px #1a2a4812; }
+    .primary { width:100%; margin-top:19px; border:0; border-radius:10px; padding:13px; color:white; background:var(--blue); font:inherit; font-weight:700; cursor:pointer; transition:.2s; }
+    .primary:hover { background:var(--blue-dark); transform:translateY(-1px); }
+    .secondary { background:#eef2fa; color:#43516b; }
+    .toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; }
+    .toolbar h2 { margin:0; }
+    .filters { display:flex; gap:9px; }
+    .filters select { min-width:135px; padding:9px 10px; font-size:12px; }
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; min-width:520px; }
+    th { text-align:left; color:#8993a6; font-size:11px; text-transform:uppercase; letter-spacing:.7px; padding:12px 10px; border-bottom:1px solid var(--line); }
+    td { padding:15px 10px; border-bottom:1px solid #eef1f6; font-size:13px; }
+    tbody tr:last-child td { border-bottom:0; }
+    .transaction-name { font-weight:700; }
+    .category { display:inline-block; background:#f0f4fc; color:#52627e; border-radius:20px; padding:5px 9px; font-size:11px; }
+    .money { font-weight:750; white-space:nowrap; }
+    .money.in { color:var(--green); } .money.out { color:var(--red); }
+    .actions { display:flex; gap:6px; }
+    .icon-btn { border:1px solid var(--line); background:white; border-radius:8px; padding:6px 8px; cursor:pointer; color:#64718a; }
+    .icon-btn:hover { background:#f2f5fb; }
+    .empty { text-align:center; padding:42px 12px; color:var(--muted); }
+    .empty strong { display:block; color:#3c4961; margin-bottom:5px; }
+    .footnote { color:#9aa3b3; font-size:11px; margin:17px 2px 0; line-height:1.5; }
+    @media (max-width:850px) { .content { grid-template-columns:1fr; } }
+    @media (max-width:600px) {
+      .app { padding:22px 14px 35px; }
+      header { align-items:flex-start; flex-direction:column; }
+      .date-pill { align-self:flex-start; }
+      .summary { grid-template-columns:1fr; gap:11px; }
+      .card { padding:17px; }
+      .toolbar { align-items:flex-start; flex-direction:column; }
+      .filters { width:100%; } .filters select { flex:1; min-width:0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div class="brand">
+        <div class="logo">₹</div>
+        <div>
+          <h1>Expense Tracker</h1>
+          <p class="subtitle">Know where your money goes.</p>
+        </div>
+      </div>
+      <div class="date-pill" id="todayLabel"></div>
+    </header>
+
+    <section class="summary" aria-label="Financial summary">
+      <article class="card summary-card income">
+        <div><div class="summary-label">Total Income</div><div class="amount" id="totalIncome">₹0.00</div></div>
+        <div class="summary-icon">↗</div>
+      </article>
+      <article class="card summary-card expense">
+        <div><div class="summary-label">Total Expenses</div><div class="amount" id="totalExpense">₹0.00</div></div>
+        <div class="summary-icon">↘</div>
+      </article>
+      <article class="card summary-card balance">
+        <div><div class="summary-label">Current Balance</div><div class="amount" id="balance">₹0.00</div></div>
+        <div class="summary-icon">▣</div>
+      </article>
+    </section>
+
+    <section class="content">
+      <aside class="card">
+        <h2 id="formTitle">Add a transaction</h2>
+        <form id="transactionForm">
+          <div class="type-switch" role="group" aria-label="Transaction type">
+            <button type="button" class="active" data-type="expense">Expense</button>
+            <button type="button" data-type="income">Income</button>
+          </div>
+          <label for="description">Description</label>
+          <input id="description" type="text" maxlength="60" placeholder="e.g. Grocery shopping" required />
+          <label for="amountInput">Amount (₹)</label>
+          <input id="amountInput" type="number" min="0.01" step="0.01" placeholder="e.g. 500" required />
+          <label for="category">Category</label>
+          <select id="category" required></select>
+          <label for="date">Date</label>
+          <input id="date" type="date" required />
+          <button class="primary" id="submitBtn" type="submit">Add transaction</button>
+          <button class="primary secondary" id="cancelEdit" type="button" hidden>Cancel editing</button>
+        </form>
+        <p class="footnote">Your transactions are saved in this browser using Local Storage. They are not uploaded to a server.</p>
+      </aside>
+
+      <section class="card">
+        <div class="toolbar">
+          <h2>Transaction history</h2>
+          <div class="filters">
+            <select id="typeFilter" aria-label="Filter by type">
+              <option value="all">All types</option><option value="income">Income</option><option value="expense">Expenses</option>
+            </select>
+            <select id="categoryFilter" aria-label="Filter by category"><option value="all">All categories</option></select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Description</th><th>Category</th><th>Date</th><th>Amount</th><th>Actions</th></tr></thead>
+            <tbody id="transactionRows"></tbody>
+          </table>
+          <div class="empty" id="emptyState"><strong>No transactions yet</strong>Add your first income or expense to get started.</div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "expenseTrackerTransactions";
+    const categories = {
+      expense: ["Food", "Transport", "Shopping", "Bills", "Entertainment", "Health", "Education", "Other"],
+      income: ["Salary", "Freelance", "Business", "Gift", "Investment", "Other"]
+    };
+    let transactions = loadTransactions();
+    let selectedType = "expense";
+    let editingId = null;
+
+    const $ = (id) => document.getElementById(id);
+    const money = (value) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(value);
+    const today = new Date().toISOString().slice(0, 10);
+
+    function loadTransactions() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+        return Array.isArray(saved) ? saved : [];
+      } catch { return []; }
+    }
+    function saveTransactions() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(transactions));
+    }
+    function populateCategories() {
+      $("category").innerHTML = categories[selectedType].map(c => `<option value="${c}">${c}</option>`).join("");
+    }
+    function updateCategoryFilter() {
+      const current = $("categoryFilter").value;
+      const all = [...new Set(transactions.map(t => t.category))].sort();
+      $("categoryFilter").innerHTML = '<option value="all">All categories</option>' +
+        all.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+      if (all.includes(current)) $("categoryFilter").value = current;
+    }
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, ch => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[ch]));
+    }
+    function render() {
+      const income = transactions.filter(t => t.type === "income").reduce((sum,t) => sum + t.amount, 0);
+      const expense = transactions.filter(t => t.type === "expense").reduce((sum,t) => sum + t.amount, 0);
+      $("totalIncome").textContent = money(income);
+      $("totalExpense").textContent = money(expense);
+      $("balance").textContent = money(income - expense);
+
+      updateCategoryFilter();
+      const type = $("typeFilter").value;
+      const category = $("categoryFilter").value;
+      const visible = transactions.filter(t => (type === "all" || t.type === type) && (category === "all" || t.category === category))
+        .sort((a,b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
+      $("transactionRows").innerHTML = visible.map(t => `
+        <tr>
+          <td><span class="transaction-name">${escapeHtml(t.description)}</span></td>
+          <td><span class="category">${escapeHtml(t.category)}</span></td>
+          <td>${new Date(t.date + "T00:00:00").toLocaleDateString("en-IN", {day:"2-digit", month:"short", year:"numeric"})}</td>
+          <td class="money ${t.type === "income" ? "in" : "out"}">${t.type === "income" ? "+" : "−"}${money(t.amount)}</td>
+          <td><div class="actions">
+            <button class="icon-btn" type="button" data-edit="${t.id}" aria-label="Edit transaction">Edit</button>
+            <button class="icon-btn" type="button" data-delete="${t.id}" aria-label="Delete transaction">Delete</button>
+          </div></td>
+        </tr>`).join("");
+      $("emptyState").hidden = visible.length !== 0;
+      $("transactionRows").parentElement.hidden = visible.length === 0;
+    }
+    function resetForm() {
+      editingId = null;
+      $("transactionForm").reset();
+      $("date").value = today;
+      $("formTitle").textContent = "Add a transaction";
+      $("submitBtn").textContent = "Add transaction";
+      $("cancelEdit").hidden = true;
+      document.querySelectorAll(".type-switch button").forEach(b => b.classList.toggle("active", b.dataset.type === "expense"));
+      selectedType = "expense";
+      populateCategories();
+    }
+
+    document.querySelectorAll(".type-switch button").forEach(button => {
+      button.addEventListener("click", () => {
+        selectedType = button.dataset.type;
+        document.querySelectorAll(".type-switch button").forEach(b => b.classList.toggle("active", b === button));
+        populateCategories();
+      });
+    });
+
+    $("transactionForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const description = $("description").value.trim();
+      const amount = Number($("amountInput").value);
+      const date = $("date").value;
+      const category = $("category").value;
+      if (!description || !Number.isFinite(amount) || amount <= 0 || !date || !category) {
+        alert("Please enter a description, a valid amount, category and date.");
+        return;
+      }
+      const transaction = { id: editingId || (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+        description, amount, date, category, type: selectedType, createdAt: Date.now() };
+      if (editingId) {
+        const index = transactions.findIndex(t => t.id === editingId);
+        if (index !== -1) transactions[index] = { ...transactions[index], ...transaction };
+      } else transactions.push(transaction);
+      saveTransactions();
+      resetForm();
+      render();
+    });
+
+    $("transactionRows").addEventListener("click", (event) => {
+      const editId = event.target.dataset.edit;
+      const deleteId = event.target.dataset.delete;
+      if (editId) {
+        const t = transactions.find(item => item.id === editId);
+        if (!t) return;
+        editingId = t.id;
+        selectedType = t.type;
+        document.querySelectorAll(".type-switch button").forEach(b => b.classList.toggle("active", b.dataset.type === selectedType));
+        populateCategories();
+        $("description").value = t.description;
+        $("amountInput").value = t.amount;
+        $("category").value = t.category;
+        $("date").value = t.date;
+        $("formTitle").textContent = "Edit transaction";
+        $("submitBtn").textContent = "Save changes";
+        $("cancelEdit").hidden = false;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      if (deleteId) {
+        if (!confirm("Delete this transaction? This cannot be undone.")) return;
+        transactions = transactions.filter(t => t.id !== deleteId);
+        saveTransactions();
+        if (editingId === deleteId) resetForm();
+        render();
+      }
+    });
+    $("cancelEdit").addEventListener("click", resetForm);
+    $("typeFilter").addEventListener("change", render);
+    $("categoryFilter").addEventListener("change", render);
+
+    $("todayLabel").textContent = new Date().toLocaleDateString("en-IN", { weekday:"long", day:"numeric", month:"long", year:"numeric" });
+    $("date").value = today;
+    populateCategories();
+    render();
+  </script>
+</body>
+</html>
